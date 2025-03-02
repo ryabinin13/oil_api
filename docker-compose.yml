@@ -1,0 +1,33 @@
+services:
+  web:
+    container_name: oil_web
+    build: .
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0'
+    volumes:
+      - .:/app
+    ports:
+      - 8008:8000
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://oil:oil@db:5432/oil
+    depends_on:
+      - db
+  db:
+    container_name: oil_db
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    expose:
+      - 5432
+    environment:
+      - POSTGRES_USER=oil
+      - POSTGRES_PASSWORD=oil
+      - POSTGRES_DB=oil
+
+  cache:
+    image: redis:7.2.4-alpine
+    restart: always
+    ports:
+      - 6379:6379
+
+volumes:
+  postgres_data:
